@@ -195,9 +195,9 @@ MIT License - see [LICENSE](LICENSE) file.
 
 ---
 
-## About Kilo Code 🤖
+## About Kilo Code CLI 🤖
 
-This project was built using **Kilo Code** - a powerful AI-powered CLI tool that brings the power of AI to your terminal! 🚀
+This project was built using **Kilo Code CLI** - a powerful AI-powered CLI tool that brings the power of AI to your terminal! 🚀
 
 **Key Features:**
 - ✨ AI-powered code generation and assistance
