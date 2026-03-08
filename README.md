@@ -53,10 +53,12 @@ This project was implemented entirely using the [KiloCode CLI](https://kilo.ai/)
 ## Screenshots
 
 ### GUI
-![GUI](docs/screenshot-gui.png)
+<img width="504" height="577" alt="gui-interface-ambient-music-player" src="https://github.com/user-attachments/assets/d6f416aa-b0be-48b8-8bd0-5ee803b04b57" />
+
 
 ### Web Interface
-![Web](docs/screenshot-web.png)
+<img width="640" height="817" alt="web-interface-ambient-music-player" src="https://github.com/user-attachments/assets/2cc293a4-6a84-4cba-a422-53654b51202b" />
+
 
 ## Installation
 
