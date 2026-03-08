@@ -1,0 +1,766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ambient Music Player</title>
+    <style>
+        :root {
+            --bg: #1E1E2E;
+            --surface: #2A2A3E;
+            --primary: #7C3AED;
+            --primary-hover: #6D28D9;
+            --text: #E5E7EB;
+            --text-dim: #9CA3AF;
+            --accent: #10B981;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .player {
+            background: var(--surface);
+            border-radius: 16px;
+            padding: 24px;
+            width: 100%;
+            max-width: 400px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        }
+        
+        .title {
+            text-align: center;
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 20px;
+            color: var(--text);
+        }
+        
+        .now-playing {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        
+        .track-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .track-artist {
+            font-size: 14px;
+            color: var(--text-dim);
+        }
+        
+        .progress-container {
+            margin-bottom: 16px;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: var(--bg);
+            border-radius: 3px;
+            cursor: pointer;
+            position: relative;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: var(--primary);
+            border-radius: 3px;
+            width: 0%;
+            transition: width 0.1s;
+        }
+        
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-top: 8px;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .control-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: none;
+            background: var(--bg);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+        
+        .control-btn:hover {
+            background: var(--primary);
+            transform: scale(1.05);
+        }
+        
+        .control-btn.play {
+            width: 56px;
+            height: 56px;
+            background: var(--primary);
+        }
+        
+        .volume-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+        
+        .volume-icon {
+            font-size: 18px;
+        }
+        
+        .volume-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 6px;
+            background: var(--bg);
+            border-radius: 3px;
+            outline: none;
+        }
+        
+        .volume-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: var(--primary);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .playlist-select {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+            cursor: pointer;
+            margin-bottom: 16px;
+        }
+        
+        .playlist-select option {
+            background: var(--surface);
+        }
+        
+        .status {
+            text-align: center;
+            font-size: 12px;
+            color: var(--accent);
+        }
+        
+        .status.paused {
+            color: var(--text-dim);
+        }
+        
+        .port-info {
+            text-align: center;
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-top: 16px;
+        }
+        
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin: 20px 0 10px;
+            color: var(--text);
+        }
+        
+        .manage-btn {
+            width: 100%;
+            padding: 10px;
+            background: var(--bg);
+            border: 1px solid var(--primary);
+            border-radius: 8px;
+            color: var(--text);
+            cursor: pointer;
+            margin-top: 10px;
+            transition: all 0.2s;
+        }
+        
+        .manage-btn:hover {
+            background: var(--primary);
+        }
+        
+        .track-list {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+        }
+        
+        .track-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px;
+            background: var(--bg);
+            border-radius: 4px;
+            margin-bottom: 4px;
+            font-size: 12px;
+        }
+        
+        .track-item .info {
+            flex: 1;
+            cursor: pointer;
+        }
+        
+        .track-item .delete-btn {
+            background: none;
+            border: none;
+            color: #EF4444;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+        
+        .playlist-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px;
+            background: var(--bg);
+            border-radius: 4px;
+            margin-bottom: 4px;
+        }
+        
+        .playlist-item .actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .btn-small {
+            padding: 4px 8px;
+            font-size: 11px;
+            background: var(--primary);
+            border: none;
+            border-radius: 4px;
+            color: white;
+            cursor: pointer;
+        }
+        
+        .btn-small.danger {
+            background: #EF4444;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.7);
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--surface);
+            border-radius: 12px;
+            padding: 20px;
+            width: 90%;
+            max-width: 400px;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+        
+        .modal-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .form-group {
+            margin-bottom: 12px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--text-dim);
+            margin-bottom: 4px;
+        }
+        
+        .form-group input {
+            width: 100%;
+            padding: 8px;
+            background: var(--bg);
+            border: 1px solid var(--text-dim);
+            border-radius: 4px;
+            color: var(--text);
+        }
+        
+        .close-modal {
+            float: right;
+            background: none;
+            border: none;
+            color: var(--text-dim);
+            cursor: pointer;
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <div class="player">
+        <div class="title">♪ Ambient Music Player</div>
+        
+        <div class="now-playing">
+            <div class="track-title" id="trackTitle">No track loaded</div>
+            <div class="track-artist" id="trackArtist">Select a playlist to start</div>
+        </div>
+        
+        <div class="progress-container">
+            <div class="progress-bar" id="progressBar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+            <div class="time-display">
+                <span id="currentTime">00:00</span>
+                <span id="totalTime">00:00</span>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="control-btn" id="prevBtn">⏮</button>
+            <button class="control-btn play" id="playBtn">⏯</button>
+            <button class="control-btn" id="stopBtn">⏹</button>
+            <button class="control-btn" id="nextBtn">⏭</button>
+            <button class="control-btn" id="shuffleBtn" title="Shuffle">🔀</button>
+        </div>
+        
+        <div class="volume-container">
+            <span class="volume-icon">🔊</span>
+            <input type="range" class="volume-slider" id="volumeSlider" min="0" max="100" value="70">
+        </div>
+        
+        <select class="playlist-select" id="playlistSelect">
+            <option value="">Select Playlist...</option>
+        </select>
+        
+        <div class="section-title" id="playlistTracksTitle" style="display: none;">Tracks</div>
+        <div class="track-list" id="mainTrackList"></div>
+        
+        <div class="status" id="status">Ready</div>
+        
+        <div class="port-info" id="portInfo">Server Port: 8080</div>
+        
+        <button class="manage-btn" id="managePlaylistsBtn">Manage Playlists</button>
+        <button class="manage-btn" id="manageTracksBtn">Manage Tracks</button>
+    </div>
+
+    <div class="modal" id="playlistModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closePlaylistModal()">&times;</button>
+            <div class="modal-title">Manage Playlists</div>
+            
+            <div class="form-group">
+                <label>Create New Playlist</label>
+                <div style="display: flex; gap: 8px;">
+                    <input type="text" id="newPlaylistName" placeholder="Playlist name">
+                    <button class="btn-small" onclick="createPlaylist()">Create</button>
+                </div>
+            </div>
+            
+            <div class="section-title">Your Playlists</div>
+            <div id="playlistsList"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="tracksModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeTracksModal()">&times;</button>
+            <div class="modal-title">Manage Tracks</div>
+            <div id="tracksList"></div>
+        </div>
+    </div>
+
+    <div class="modal" id="editTrackModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closeEditModal()">&times;</button>
+            <div class="modal-title">Edit Track</div>
+            <div class="form-group">
+                <label>Title</label>
+                <input type="text" id="editTrackTitle">
+            </div>
+            <div class="form-group">
+                <label>Artist</label>
+                <input type="text" id="editTrackArtist">
+            </div>
+            <input type="hidden" id="editTrackId">
+            <button class="btn-small" onclick="saveTrackEdit()" style="width: 100%; margin-top: 12px;">Save</button>
+        </div>
+    </div>
+
+    <div class="modal" id="playlistTracksModal">
+        <div class="modal-content">
+            <button class="close-modal" onclick="closePlaylistTracksModal()">&times;</button>
+            <div class="modal-title" id="playlistTracksTitle">Playlist Tracks</div>
+            <input type="hidden" id="currentPlaylistId">
+            <div id="playlistTracksList"></div>
+        </div>
+    </div>
+
+    <script>
+        let currentState = {};
+        
+        function formatTime(seconds) {
+            if (!seconds || isNaN(seconds)) return '00:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+        }
+        
+        async function fetchState() {
+            try {
+                const res = await fetch('/api/state');
+                currentState = await res.json();
+                updateUI();
+            } catch (e) {
+                console.error('Failed to fetch state:', e);
+            }
+        }
+        
+        function updateUI() {
+            const track = currentState.current_track;
+            const playlist = currentState.current_playlist;
+            
+            if (track) {
+                document.getElementById('trackTitle').textContent = track.title || 'Unknown';
+                document.getElementById('trackArtist').textContent = track.artist || 'Unknown Artist';
+            } else {
+                document.getElementById('trackTitle').textContent = 'No track loaded';
+                document.getElementById('trackArtist').textContent = playlist ? playlist.name : 'Select a playlist';
+            }
+            
+            const isPlaying = currentState.is_playing;
+            document.getElementById('playBtn').textContent = isPlaying ? '⏸' : '⏯';
+            
+            const shuffleBtn = document.getElementById('shuffleBtn');
+            if (currentState.shuffle) {
+                shuffleBtn.style.opacity = '1';
+            } else {
+                shuffleBtn.style.opacity = '0.5';
+            };
+            
+            const status = document.getElementById('status');
+            if (isPlaying) {
+                status.textContent = 'Playing';
+                status.className = 'status';
+            } else if (currentState.current_track) {
+                status.textContent = 'Paused';
+                status.className = 'status paused';
+            } else {
+                status.textContent = 'Stopped';
+                status.className = 'status paused';
+            }
+            
+            const duration = currentState.duration || 0;
+            const position = currentState.position || 0;
+            
+            if (duration > 0) {
+                document.getElementById('progressFill').style.width = (position / duration * 100) + '%';
+            }
+            
+            document.getElementById('currentTime').textContent = formatTime(currentState.current_time);
+            document.getElementById('totalTime').textContent = formatTime(duration);
+            
+            const volume = (currentState.volume || 0.7) * 100;
+            document.getElementById('volumeSlider').value = volume;
+            
+            let volumeIcon = '🔊';
+            if (volume === 0) volumeIcon = '🔇';
+            else if (volume <= 33) volumeIcon = '🔈';
+            else if (volume <= 66) volumeIcon = '🔉';
+            document.querySelector('.volume-icon').textContent = volumeIcon;
+            
+            document.getElementById('portInfo').textContent = 'Server Port: ' + (currentState.server_port || 8080);
+            
+            updatePlaylistSelect();
+        }
+        
+        let lastPlaylistId = null;
+        
+        function updatePlaylistSelect() {
+            const select = document.getElementById('playlistSelect');
+            const playlists = currentState.playlists || [];
+            
+            const currentIds = Array.from(select.options).slice(1).map(o => o.value + ':' + o.textContent).join(',');
+            const newIds = playlists.map(p => p.id + ':' + p.name).join(',');
+            if (currentIds !== newIds) {
+                select.innerHTML = '<option value="">Select Playlist...</option>';
+                playlists.forEach(p => {
+                    const opt = document.createElement('option');
+                    opt.value = p.id;
+                    opt.textContent = p.name;
+                    select.appendChild(opt);
+                });
+            }
+            
+            const currentPlaylistId = currentState.current_playlist?.id || null;
+            if (currentPlaylistId !== lastPlaylistId) {
+                lastPlaylistId = currentPlaylistId;
+                if (currentPlaylistId) {
+                    updateMainTrackList();
+                } else {
+                    document.getElementById('mainTrackList').innerHTML = '';
+                    document.getElementById('playlistTracksTitle').style.display = 'none';
+                }
+            }
+            
+            if (currentState.current_playlist) {
+                select.value = currentState.current_playlist.id;
+            }
+        }
+        
+        async function updateMainTrackList() {
+            const playlistId = currentState.current_playlist?.id;
+            if (!playlistId) return;
+            
+            const res = await fetch(`/api/playlists/${playlistId}/tracks`);
+            const tracks = await res.json();
+            
+            let html = '';
+            for (const t of tracks) {
+                const isCurrent = t.id === currentState.current_track?.id;
+                html += `<div class="track-item" style="${isCurrent ? 'border-left: 3px solid var(--primary);' : ''}">
+                    <span class="info" onclick="playTrack(${t.id})">${t.title || 'Unknown'} - ${t.artist || 'Unknown'}</span>
+                    <button class="delete-btn" onclick="removeTrackFromPlaylist(${playlistId}, ${t.id})">×</button>
+                </div>`;
+            }
+            if (tracks.length === 0) {
+                html = '<p style="color: var(--text-dim); text-align: center; padding: 10px;">No tracks in playlist</p>';
+            }
+            document.getElementById('playlistTracksTitle').style.display = tracks.length ? 'block' : 'none';
+            document.getElementById('mainTrackList').innerHTML = html;
+        }
+        
+        async function apiCall(endpoint, data = null) {
+            try {
+                const opts = { method: 'POST' };
+                if (data) {
+                    opts.headers = { 'Content-Type': 'application/json' };
+                    opts.body = JSON.stringify(data);
+                }
+                await fetch(endpoint, opts);
+                fetchState();
+            } catch (e) {
+                console.error('API call failed:', e);
+            }
+        }
+        
+        document.getElementById('playBtn').addEventListener('click', () => apiCall('/api/toggle'));
+        document.getElementById('stopBtn').addEventListener('click', () => apiCall('/api/stop'));
+        document.getElementById('nextBtn').addEventListener('click', () => apiCall('/api/next'));
+        document.getElementById('prevBtn').addEventListener('click', () => apiCall('/api/prev'));
+        document.getElementById('shuffleBtn').addEventListener('click', () => apiCall('/api/shuffle'));
+        
+        document.getElementById('volumeSlider').addEventListener('input', (e) => {
+            apiCall('/api/volume', { volume: e.target.value / 100 });
+        });
+        
+        document.getElementById('playlistSelect').addEventListener('change', (e) => {
+            if (e.target.value) {
+                apiCall('/api/playlist', { playlist_id: parseInt(e.target.value) });
+            }
+        });
+        
+        document.getElementById('progressBar').addEventListener('click', (e) => {
+            const rect = document.getElementById('progressBar').getBoundingClientRect();
+            const percent = (e.clientX - rect.left) / rect.width;
+            apiCall('/api/position', { position: percent });
+        });
+        
+        document.getElementById('managePlaylistsBtn').addEventListener('click', openPlaylistModal);
+        document.getElementById('manageTracksBtn').addEventListener('click', openTracksModal);
+        
+        async function openPlaylistModal() {
+            const res = await fetch('/api/playlists');
+            const playlists = await res.json();
+            let html = '';
+            for (const p of playlists) {
+                html += `<div class="playlist-item">
+                    <span>${p.name}</span>
+                    <div class="actions">
+                        <button class="btn-small" onclick="viewPlaylistTracks(${p.id}, '${p.name}')">View</button>
+                        <button class="btn-small" onclick="renamePlaylist(${p.id}, '${p.name}')">Rename</button>
+                        <button class="btn-small danger" onclick="deletePlaylist(${p.id})">Delete</button>
+                    </div>
+                </div>`;
+            }
+            if (playlists.length === 0) {
+                html = '<p style="color: var(--text-dim); text-align: center;">No playlists yet</p>';
+            }
+            document.getElementById('playlistsList').innerHTML = html;
+            document.getElementById('playlistModal').classList.add('active');
+        }
+        
+        async function renamePlaylist(id, currentName) {
+            const newName = prompt('Enter new name:', currentName);
+            if (!newName || newName === currentName) return;
+            await fetch(`/api/playlists/${id}/rename`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: newName })
+            });
+            openPlaylistModal();
+            fetchState();
+        }
+        
+        function closePlaylistModal() {
+            document.getElementById('playlistModal').classList.remove('active');
+        }
+        
+        async function createPlaylist() {
+            const name = document.getElementById('newPlaylistName').value;
+            if (!name) return;
+            await fetch('/api/playlists', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ name: name })
+            });
+            document.getElementById('newPlaylistName').value = '';
+            openPlaylistModal();
+            fetchState();
+        }
+        
+        async function deletePlaylist(id) {
+            if (!confirm('Delete this playlist?')) return;
+            await fetch(`/api/playlists/${id}`, { method: 'DELETE' });
+            openPlaylistModal();
+            fetchState();
+        }
+        
+        async function viewPlaylistTracks(playlistId, playlistName) {
+            document.getElementById('currentPlaylistId').value = playlistId;
+            document.getElementById('playlistTracksTitle').textContent = playlistName;
+            const res = await fetch(`/api/playlists/${playlistId}/tracks`);
+            const tracks = await res.json();
+            let html = '';
+            for (const t of tracks) {
+                html += `<div class="track-item">
+                    <span class="info" onclick="playTrack(${t.id})">${t.title || 'Unknown'} - ${t.artist || 'Unknown'}</span>
+                    <button class="delete-btn" onclick="removeFromPlaylist(${playlistId}, ${t.id})">Remove</button>
+                </div>`;
+            }
+            if (tracks.length === 0) {
+                html = '<p style="color: var(--text-dim); text-align: center;">No tracks in playlist</p>';
+            }
+            document.getElementById('playlistTracksList').innerHTML = html;
+            document.getElementById('playlistTracksModal').classList.add('active');
+        }
+        
+        function closePlaylistTracksModal() {
+            document.getElementById('playlistTracksModal').classList.remove('active');
+        }
+        
+        async function removeTrackFromPlaylist(playlistId, trackId) {
+            if (!confirm('Remove this track from playlist?')) return;
+            await fetch(`/api/playlists/${playlistId}/tracks/${trackId}`, { method: 'DELETE' });
+            updateMainTrackList();
+            fetchState();
+        }
+        
+        async function removeFromPlaylist(playlistId, trackId) {
+            await fetch(`/api/playlists/${playlistId}/tracks/${trackId}`, { method: 'DELETE' });
+            viewPlaylistTracks(playlistId, document.getElementById('playlistTracksTitle').textContent);
+            fetchState();
+        }
+        
+        async function openTracksModal() {
+            const res = await fetch('/api/tracks');
+            const tracks = await res.json();
+            let html = '';
+            for (const t of tracks) {
+                html += `<div class="track-item">
+                    <span class="info" onclick="playTrack(${t.id})">${t.title || 'Unknown'} - ${t.artist || 'Unknown'}</span>
+                    <div class="actions">
+                        <button class="btn-small" onclick="openEditTrack(${t.id}, '${t.title || ''}', '${t.artist || ''}')">Edit</button>
+                        <button class="btn-small danger" onclick="deleteTrack(${t.id})">Delete</button>
+                    </div>
+                </div>`;
+            }
+            if (tracks.length === 0) {
+                html = '<p style="color: var(--text-dim); text-align: center;">No tracks added</p>';
+            }
+            document.getElementById('tracksList').innerHTML = html;
+            document.getElementById('tracksModal').classList.add('active');
+        }
+        
+        function closeTracksModal() {
+            document.getElementById('tracksModal').classList.remove('active');
+        }
+        
+        function openEditTrack(id, title, artist) {
+            document.getElementById('editTrackId').value = id;
+            document.getElementById('editTrackTitle').value = title;
+            document.getElementById('editTrackArtist').value = artist;
+            document.getElementById('editTrackModal').classList.add('active');
+        }
+        
+        function closeEditModal() {
+            document.getElementById('editTrackModal').classList.remove('active');
+        }
+        
+        async function saveTrackEdit() {
+            const id = document.getElementById('editTrackId').value;
+            const title = document.getElementById('editTrackTitle').value;
+            const artist = document.getElementById('editTrackArtist').value;
+            await fetch(`/api/tracks/${id}`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ title, artist })
+            });
+            closeEditModal();
+            openTracksModal();
+            fetchState();
+        }
+        
+        async function deleteTrack(id) {
+            if (!confirm('Delete this track permanently?')) return;
+            await fetch(`/api/tracks/${id}`, { method: 'DELETE' });
+            openTracksModal();
+            fetchState();
+        }
+        
+        async function playTrack(trackId) {
+            await apiCall('/api/track', { track_id: trackId });
+        }
+        
+        fetchState();
+        setInterval(fetchState, 1000);
+    </script>
+</body>
+</html>
